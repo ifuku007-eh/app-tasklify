@@ -72,26 +72,24 @@ export default function Dashboard() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Dashboard</h1>
 
-        <Button onClick={() => setShowModal(true)}>
-          + Create Board
-        </Button>
+        <Button onClick={() => setShowModal(true)}>+ Create Board</Button>
       </div>
 
       {/* BOARD LIST */}
       <div className="grid md:grid-cols-3 gap-6">
         {boards.map((board) => (
-          <Card
-            key={board.id}
-            className="hover:shadow-xl transition cursor-pointer"
-            onClick={() => navigate(`/board/${board.id}`)}
-          >
+          <Card key={board.id} className="hover:shadow-xl transition">
             <CardContent className="p-4 space-y-3">
               <div
                 className="w-full h-2 rounded"
                 style={{ backgroundColor: board.color }}
               />
 
-              <h2 className="font-semibold text-lg">
+              {/* 👇 ONLY TITLE CLICKABLE */}
+              <h2
+                className="font-semibold text-lg cursor-pointer hover:underline"
+                onClick={() => navigate(`/board/${board.id}`)}
+              >
                 {board.title}
               </h2>
 
@@ -99,17 +97,21 @@ export default function Dashboard() {
                 {board.description || "No description"}
               </p>
 
-              {/* ACTION BUTTONS */}
+              {/* ACTION AREA ONLY */}
               <div
-                className="flex gap-2"
-                onClick={(e) => e.stopPropagation()} // 🔥 penting biar gak trigger navigate
+                className="flex gap-2 pt-2"
+                onClick={(e) => e.stopPropagation()}
               >
-                <Button onClick={() => openEdit(board)}>
+                <Button
+                  className="cursor-pointer"
+                  onClick={() => openEdit(board)}
+                >
                   Edit
                 </Button>
 
                 <Button
                   variant="destructive"
+                  className="cursor-pointer"
                   onClick={() => handleDelete(board.id)}
                 >
                   Delete
@@ -156,16 +158,11 @@ export default function Dashboard() {
             />
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
                 Cancel
               </Button>
 
-              <Button onClick={handleUpdate}>
-                Save
-              </Button>
+              <Button onClick={handleUpdate}>Save</Button>
             </div>
           </div>
         </div>
