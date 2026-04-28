@@ -4,8 +4,11 @@ import CreateBoardModal from "../components/CreateBoardModal";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   const [boards, setBoards] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
 
@@ -38,7 +41,7 @@ export default function Dashboard() {
     }
   };
 
-  // OPEN EDIT MODAL
+  // OPEN EDIT
   const openEdit = (board: any) => {
     setSelectedBoard(board);
     setTitle(board.title);
@@ -47,7 +50,7 @@ export default function Dashboard() {
     setIsEditOpen(true);
   };
 
-  // UPDATE BOARD
+  // UPDATE
   const handleUpdate = async () => {
     try {
       await boardService.updateBoard(selectedBoard.id, {
@@ -68,26 +71,42 @@ export default function Dashboard() {
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <Button onClick={() => setShowModal(true)}>+ Create Board</Button>
+
+        <Button onClick={() => setShowModal(true)}>
+          + Create Board
+        </Button>
       </div>
 
       {/* BOARD LIST */}
       <div className="grid md:grid-cols-3 gap-6">
         {boards.map((board) => (
-          <Card key={board.id} className="hover:shadow-xl transition">
+          <Card
+            key={board.id}
+            className="hover:shadow-xl transition cursor-pointer"
+            onClick={() => navigate(`/board/${board.id}`)}
+          >
             <CardContent className="p-4 space-y-3">
               <div
                 className="w-full h-2 rounded"
                 style={{ backgroundColor: board.color }}
               />
 
-              <h2 className="font-semibold text-lg">{board.title}</h2>
+              <h2 className="font-semibold text-lg">
+                {board.title}
+              </h2>
+
               <p className="text-sm text-gray-500">
                 {board.description || "No description"}
               </p>
 
-              <div className="flex gap-2">
-                <Button onClick={() => openEdit(board)}>Edit</Button>
+              {/* ACTION BUTTONS */}
+              <div
+                className="flex gap-2"
+                onClick={(e) => e.stopPropagation()} // 🔥 penting biar gak trigger navigate
+              >
+                <Button onClick={() => openEdit(board)}>
+                  Edit
+                </Button>
 
                 <Button
                   variant="destructive"
@@ -137,7 +156,10 @@ export default function Dashboard() {
             />
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditOpen(false)}
+              >
                 Cancel
               </Button>
 

@@ -1,17 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
+
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+
     "strict": true,
+
     "outDir": "./dist",
     "rootDir": "./src",
-    // Matikan ini karena ini yang menyebabkan konflik dengan CommonJS
-    "verbatimModuleSyntax": false,
-    "isolatedModules": true
+
+    "isolatedModules": true,
+
   },
   "include": ["src/**/*"]
 }
