@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { AuthRequest } from "../types";
+import { getIO } from "../socket";
 
 const prisma = new PrismaClient();
 
@@ -43,6 +44,9 @@ export const createTask = async (req: AuthRequest, res: Response) => {
       },
     });
 
+    // 🔥 REALTIME
+    getIO().emit("task:created", task);
+
     res.status(201).json(task);
   } catch (err) {
     res.status(500).json({ message: "Gagal membuat task" });
@@ -71,7 +75,7 @@ export const getTaskDetail = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// UPDATE TASK (EDIT + DRAG)
+// UPDATE TASK (EDIT)
 export const updateTask = async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -90,11 +94,14 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
         title,
         description,
         priority,
-        columnId, 
-        order,   
+        columnId,
+        order,
         dueDate: dueDate ? new Date(dueDate) : undefined,
       },
     });
+
+    // 🔥 REALTIME
+    getIO().emit("task:updated", updated);
 
     res.json({
       message: "Task berhasil diupdate",
@@ -105,7 +112,7 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// MOVE TASK (DRAG & DROP API)
+// MOVE TASK (DRAG & DROP)
 export const moveTask = async (req: AuthRequest, res: Response) => {
   try {
     const { taskId, columnId, order } = req.body;
@@ -121,6 +128,9 @@ export const moveTask = async (req: AuthRequest, res: Response) => {
         order: order ?? 0,
       },
     });
+
+    // 🔥 REALTIME
+    getIO().emit("task:moved", updated);
 
     res.json({
       message: "Task berhasil dipindahkan",
@@ -139,6 +149,9 @@ export const deleteTask = async (req: AuthRequest, res: Response) => {
     await prisma.task.delete({
       where: { id },
     });
+
+    // 🔥 REALTIME
+    getIO().emit("task:deleted", id);
 
     res.json({ message: "Task berhasil dihapus" });
   } catch (err) {

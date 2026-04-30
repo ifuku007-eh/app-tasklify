@@ -5,7 +5,7 @@ import { taskService } from "../services/taskService";
 
 import {
   DndContext,
-  closestCenter,
+  closestCorners,
   useSensor,
   useSensors,
   PointerSensor,
@@ -15,15 +15,16 @@ import ColumnDropZone from "../components/ColumnDropZone";
 import TaskDetailModal from "../components/TaskDetailModal";
 import CreateTaskModal from "../components/CreateTaskModal";
 
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
+
 export default function BoardDetail() {
   const { id } = useParams();
   const [board, setBoard] = useState<any>(null);
 
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-
-  const [editTask] = useState<any>(null);
-  const [editOpen, setEditOpen] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -36,31 +37,53 @@ export default function BoardDetail() {
 
   useEffect(() => {
     fetchBoard();
+
+    // 🔥 REALTIME LISTENER
+    socket.on("task:created", fetchBoard);
+    socket.on("task:updated", fetchBoard);
+    socket.on("task:deleted", fetchBoard);
+    socket.on("task:moved", fetchBoard);
+
+    return () => {
+      socket.off("task:created");
+      socket.off("task:updated");
+      socket.off("task:deleted");
+      socket.off("task:moved");
+    };
   }, []);
 
+  // ✅ FIX DRAG
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
 
     if (!over) return;
 
-    await taskService.updateTask(active.id, {
-      columnId: over.id,
-    });
+    const taskId = active.id;
+    const newColumnId = over.id;
 
-    fetchBoard();
+    try {
+      await taskService.moveTask({
+        taskId,
+        columnId: newColumnId,
+        order: 0,
+      });
+    } catch (err) {
+      console.error("Drag error:", err);
+    }
   };
 
   if (!board) return <div className="p-6">Loading...</div>;
 
   return (
     <div className="p-6 space-y-4">
+
       {/* HEADER */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <h1 className="font-bold text-xl">{board.title}</h1>
 
         <button
           onClick={() => setCreateOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700"
         >
           + Create Task
         </button>
@@ -69,10 +92,11 @@ export default function BoardDetail() {
       {/* BOARD */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={closestCorners}
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-4 overflow-x-auto">
+
           {board.columns.map((col: any) => (
             <ColumnDropZone
               key={col.id}
@@ -83,24 +107,15 @@ export default function BoardDetail() {
               }}
             />
           ))}
+
         </div>
       </DndContext>
 
-      {/* DETAIL MODAL */}
+      {/* DETAIL */}
       {detailOpen && selectedTask && (
         <TaskDetailModal
           task={selectedTask}
           onClose={() => setDetailOpen(false)}
-        />
-      )}
-
-      {/* EDIT MODAL (reuse modal atau buat sendiri) */}
-      {editOpen && editTask && (
-        <TaskDetailModal
-          task={editTask}
-          mode="edit"
-          onClose={() => setEditOpen(false)}
-          onUpdated={fetchBoard}
         />
       )}
 
